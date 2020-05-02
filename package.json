@@ -8,9 +8,9 @@
   "license": "Apache-2.0",
   "private": false,
   "scripts": {
-    "clean": "rimraf lib/emoji.js",
+    "clean": "rimraf lib/*",
     "build": "echo Building",
-    "build-data": "node scripts/emoji.js > lib/emoji.js"
+    "build-data": "node scripts/emoji.js > data/emoji.js"
   },
   "devDependencies": {
     "@svgr/core": "^5.4.0",
