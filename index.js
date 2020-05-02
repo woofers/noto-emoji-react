@@ -25,4 +25,10 @@ const toUnicodeBytes = value => {
   return bytes
 }
 
+const toEmoji = value => {
+  const removed = value.replace('emoji_u', '').replace('.svg', '')
+  const parts = removed.split('_')
+  return eval("'" + parts.map(b => `\\u\{${b}\}`).join('') + "'")
+}
+
 const escapeBytes = values => `emoji_u${values.join('_')}.svg`
