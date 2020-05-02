@@ -1,4 +1,9 @@
 
+const fs = require('fs')
+const path = require('path')
+
+const dir = path.join(__dirname, 'svg');
+
 const surrogatePair = (high, low) => (high - 0xD800) * 0x400 + low - 0xDC00 + 0x10000
 
 const isPair = value => value > 0xFFFF
@@ -32,3 +37,13 @@ const toEmoji = value => {
 }
 
 const escapeBytes = values => `emoji_u${values.join('_')}.svg`
+
+const obj = {}
+fs.readdir(dir, (err, files) => {
+  if (err) return console.log('Unable to scan directory: ' + err);
+  files.forEach(file => {
+    if (!file.includes('.svg')) return
+    obj[toEmoji(file)] = file
+  })
+  console.log(obj)
+})
