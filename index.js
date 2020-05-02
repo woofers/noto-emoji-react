@@ -95,5 +95,11 @@ const next = async () => {
     const name = await getName(emoji)
     obj[emoji] = { ...obj[emoji], name }
   }
+  dump()
+}
+
+const dump = () => {
+  console.log('// THIS FILE IS AUTO GENERATED')
+  process.stdout.write('module.exports = ')
   console.log(obj)
 }

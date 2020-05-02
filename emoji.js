@@ -1,3 +1,4 @@
+// THIS FILE IS AUTO GENERATED
 module.exports = {
   '0': { file: 'emoji_u0030.svg', name: 'Digit Zero' },
   '1': { file: 'emoji_u0031.svg', name: 'Digit One' },
