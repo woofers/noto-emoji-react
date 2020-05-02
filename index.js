@@ -2,7 +2,7 @@
 const fs = require('fs')
 const path = require('path')
 
-const dir = path.join(__dirname, 'svg');
+const dir = path.join(__dirname, 'noto/svg');
 
 const surrogatePair = (high, low) => (high - 0xD800) * 0x400 + low - 0xDC00 + 0x10000
 
