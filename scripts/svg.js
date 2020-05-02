@@ -8,11 +8,16 @@ const out = path.join(__dirname, '../lib');
 const uppercase = word => word.charAt(0).toUpperCase() + word.slice(1)
 
 const convertNames = data => {
+  const table = {
+    "1stPlaceMedal": 'GoldMedal',
+    "2ndPlaceMedal": 'SilverMedal',
+    "3rdPlaceMedal": 'BronzeMedal'
+  }
   return Object.fromEntries(Object.entries(data).map(([key, { file, name }]) => {
     const symbols = name.replace(/(:|,|“|”|-|!|’)/g, '').replace(/ *\([^)]*\) */g, '')
     const words = symbols.split(' ').map(uppercase)
     const next = words.join('')
-    return [key, { file, name: next }]
+    return [key, { file, name: table[next] || next }]
   }))
 }
 
