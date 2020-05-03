@@ -30,7 +30,19 @@ for (const emoji of Object.values(emojis)) {
       console.log(`Could not read ${file}`)
       return
     }
-    svgr(data, { icon: true }, { componentName: name }).then(code => {
+    const config = {
+      icon: true,
+      plugins: ['@svgr/plugin-svgo', '@svgr/plugin-jsx'],
+      svgo: true,
+      svgoConfig: {
+        plugins: [{
+          cleanupIDs: {
+            prefix: `${name}-`
+          }
+        }]
+      }
+    }
+    svgr(data, config, { componentName: name }).then(code => {
       fs.writeFile(`${out}/${name}.js`, code, (err) => {
         if (err) {
           console.log(`Could not write ${name}.js`)
