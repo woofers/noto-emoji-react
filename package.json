@@ -9,9 +9,10 @@
   "private": false,
   "scripts": {
     "clean": "rimraf lib/* noto/svg-baked",
-    "build": "node scripts/svg.js",
-    "build-data": "node scripts/emoji.js > data/emoji.js",
-    "bake-fonts": "./scripts/bake-fonts.sh"
+    "build": "yarn clean && yarn build-fonts && yarn build-react",
+    "build-react": "node scripts/svg.js",
+    "build-fonts": "./scripts/bake-fonts.sh",
+    "build-data": "node scripts/emoji.js > data/emoji.js"
   },
   "devDependencies": {
     "@svgr/core": "^5.4.0",
