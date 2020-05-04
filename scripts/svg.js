@@ -2,7 +2,7 @@ const data = require('../data/emoji')
 const svgr = require('@svgr/core').default
 const fs = require('fs')
 const path = require('path')
-const dir = path.join(__dirname, '../noto/svg');
+const dir = path.join(__dirname, '../noto/svg-baked');
 const out = path.join(__dirname, '../lib');
 
 const uppercase = word => word.charAt(0).toUpperCase() + word.slice(1)
