@@ -5,6 +5,15 @@ const path = require('path')
 const dir = path.join(__dirname, '../noto/svg-baked');
 const out = path.join(__dirname, '../lib');
 
+const writeFile = (file, content) => {
+  fs.writeFile(`${out}/${file}.js`, content, (err) => {
+    if (err) {
+      console.log(`Could not write ${file}.js`)
+      return
+    }
+  })
+}
+
 const uppercase = word => word.charAt(0).toUpperCase() + word.slice(1)
 
 const convertNames = data => {
@@ -23,8 +32,11 @@ const convertNames = data => {
 
 const emojis = convertNames(data)
 
+let index = ''
+
 for (const emoji of Object.values(emojis)) {
   const { name, file } = emoji
+  index += `export { default as ${name} } from './${name}'\n`
   fs.readFile(`${dir}/${file}`, 'utf8', (err, data) => {
     if (err) {
       console.log(`Could not read ${file}`)
@@ -43,12 +55,9 @@ for (const emoji of Object.values(emojis)) {
       }
     }
     svgr(data, config, { componentName: name }).then(code => {
-      fs.writeFile(`${out}/${name}.js`, code, (err) => {
-        if (err) {
-          console.log(`Could not write ${name}.js`)
-          return
-        }
-      })
+      writeFile(name, code)
     })
   })
 }
+
+writeFile('index', index)
