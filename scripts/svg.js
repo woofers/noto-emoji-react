@@ -4,6 +4,7 @@ const fs = require('fs')
 const path = require('path')
 const dir = path.join(__dirname, '../noto/svg-baked');
 const out = path.join(__dirname, '../lib');
+const template = require('./template')
 
 const writeFile = (file, content) => {
   fs.writeFile(`${out}/${file}.js`, content, (err) => {
@@ -11,6 +12,15 @@ const writeFile = (file, content) => {
       console.log(`Could not write ${file}.js`)
       return
     }
+  })
+}
+
+const readFile = (filename) => {
+  return new Promise((resolve, reject) => {
+    fs.readFile(filename, 'utf-8', (err, buffer) => {
+      if (err) return reject(err)
+      resolve(buffer)
+    })
   })
 }
 
@@ -23,29 +33,24 @@ const convertNames = data => {
     "3rdPlaceMedal": 'BronzeMedal'
   }
   return Object.fromEntries(Object.entries(data).map(([key, { file, name }]) => {
-    const symbols = name.replace(/(:|,|“|”|-|!|’)/g, '').replace(/ *\([^)]*\) */g, '')
+    const symbols = name.replace(/(:|,|“|”|-|!|’|\.)/g, '').replace(/ *\([^)]*\) */g, '')
     const words = symbols.split(' ').map(uppercase)
     const next = words.join('')
     return [key, { file, name: table[next] || next }]
   }))
 }
 
-const emojis = convertNames(data)
-
-let index = ''
-
-for (const emoji of Object.values(emojis)) {
-  const { name, file } = emoji
-  index += `export { default as ${name} } from './${name}'\n`
-  fs.readFile(`${dir}/${file}`, 'utf8', (err, data) => {
-    if (err) {
-      console.log(`Could not read ${file}`)
-      return
-    }
+const code = async () => {
+  const emojis = convertNames(data)
+  let index = `var React = require('react')`
+  for (const emoji of Object.values(emojis)) {
+    const { name, file } = emoji
+    const data = await readFile(`${dir}/${file}`)
     const config = {
       icon: true,
       plugins: ['@svgr/plugin-svgo', '@svgr/plugin-jsx'],
       svgo: true,
+      template,
       svgoConfig: {
         plugins: [{
           cleanupIDs: {
@@ -54,10 +59,14 @@ for (const emoji of Object.values(emojis)) {
         }]
       }
     }
-    svgr(data, config, { componentName: name }).then(code => {
-      writeFile(name, code)
-    })
-  })
+    const code = await svgr(data, config, { componentName: name })
+    index += '\n'
+    index += code
+  }
+  return index
 }
 
-writeFile('index', index)
+(async () => {
+  const index = await code()
+  writeFile('index', index)
+})()
