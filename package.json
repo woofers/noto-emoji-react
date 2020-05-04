@@ -8,9 +8,10 @@
   "license": "Apache-2.0",
   "private": false,
   "scripts": {
-    "clean": "rimraf lib/*",
+    "clean": "rimraf lib/* noto/svg-baked",
     "build": "node scripts/svg.js",
-    "build-data": "node scripts/emoji.js > data/emoji.js"
+    "build-data": "node scripts/emoji.js > data/emoji.js",
+    "bake-fonts": "./scripts/bake-fonts.sh"
   },
   "devDependencies": {
     "@svgr/core": "^5.4.0",
