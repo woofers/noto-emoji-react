@@ -9,13 +9,10 @@ bake_svg () {
   inkscape $ENTRY --export-text-to-path --export-plain-svg=$DEST/$FILE
 }
 
-mkdir -p $DEST
+cp -r $SRC/. $DEST
 
-for ENTRY in $SRC/*
+for ENTRY in $SRC/emoji_u1f947.svg $SRC/emoji_u1f948.svg $SRC/emoji_u1f949.svg
 do
   FILE="$(basename $ENTRY)"
-  if [ $FILE != 'LICENSE' ]
-  then
-    bake_svg $FILE $ENTRY
-  fi
+  bake_svg $FILE $ENTRY
 done
