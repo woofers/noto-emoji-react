@@ -40,10 +40,10 @@ const convertNames = data => {
   }))
 }
 
-const code = async () => {
+const code = async esm => {
   let ex = ''
   const emojis = convertNames(data)
-  let index = `var React = require('react')\n`
+  let index = esm ? `import React from 'react'\n` :`var React = require('react')\n`
   for (const emoji of Object.values(emojis)) {
     const { name, file } = emoji
     const data = await readFile(`${dir}/${file}`)
@@ -51,7 +51,7 @@ const code = async () => {
       icon: true,
       plugins: ['@svgr/plugin-svgo', '@svgr/plugin-jsx'],
       svgo: true,
-      template,
+      template: template(esm),
       svgoConfig: {
         plugins: [{
           cleanupIDs: {
@@ -74,10 +74,11 @@ const code = async () => {
     }
     index += lines.slice(1).join('\n')
   }
+  writeFile(`index${esm ? '.esm' : ''}`, index)
   return index
 }
 
 (async () => {
-  const index = await code()
-  writeFile('index', index)
+  await code()
+  await code(true)
 })()
