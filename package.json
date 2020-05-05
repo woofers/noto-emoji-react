@@ -16,6 +16,7 @@
     "build-data": "node scripts/emoji.js > data/emoji.js"
   },
   "devDependencies": {
+    "@babel/plugin-transform-react-jsx": "^7.9.4",
     "@svgr/core": "^5.4.0",
     "@svgr/plugin-svgo": "^5.4.0",
     "node-fetch": "^2.6.0",

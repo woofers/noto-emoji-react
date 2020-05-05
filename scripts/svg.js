@@ -52,6 +52,16 @@ for (const emoji of Object.values(emojis)) {
             prefix: `${name}-`
           }
         }]
+      },
+      jsx: {
+        babelConfig: {
+          plugins: [[
+            '@babel/plugin-transform-react-jsx',
+            {
+              useBuiltIns: true
+            }
+          ]]
+        }
       }
     }
     svgr(data, config, { componentName: name }).then(code => {
