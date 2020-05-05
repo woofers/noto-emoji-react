@@ -41,8 +41,9 @@ const convertNames = data => {
 }
 
 const code = async () => {
+  let ex = ''
   const emojis = convertNames(data)
-  let index = `var React = require('react')`
+  let index = `var React = require('react')\n`
   for (const emoji of Object.values(emojis)) {
     const { name, file } = emoji
     const data = await readFile(`${dir}/${file}`)
@@ -57,11 +58,21 @@ const code = async () => {
             prefix: `${name}-`
           }
         }]
+      },
+      jsx: {
+        babelConfig: {
+          plugins: ['@babel/plugin-transform-react-jsx']
+        }
       }
     }
     const code = await svgr(data, config, { componentName: name })
+    lines = code.split('\n')
     index += '\n'
-    index += code
+    if (lines[0].includes('function _extends()') && !ex) {
+      ex = lines[0]
+      index += `${ex}\n`
+    }
+    index += lines.slice(1).join('\n')
   }
   return index
 }
