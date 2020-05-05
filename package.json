@@ -2,7 +2,7 @@
   "name": "noto-emoji-react",
   "version": "1.0.0",
   "description": "Unicode 12.0 React SVG bindings for Noto Color Emoji font",
-  "main": "lib/index.js",
+  "module": "index.js",
   "repository": "https://github.com/woofers/noto-emoji-react",
   "author": "Jaxson Van Doorn <woofers1tt@gmail.com>",
   "license": "Apache-2.0",
@@ -10,7 +10,8 @@
   "sideEffects": false,
   "scripts": {
     "clean": "rimraf lib/* noto/svg-baked",
-    "build": "yarn clean && yarn build-fonts && yarn build-react",
+    "build": "yarn clean && yarn build-fonts && yarn build-react && yarn build-copy",
+    "build-copy": "cp package.json LICENSE lib/.",
     "build-react": "node scripts/svg.js",
     "build-fonts": "./scripts/bake-fonts.sh",
     "build-data": "node scripts/emoji.js > data/emoji.js"
@@ -22,5 +23,8 @@
     "node-fetch": "^2.6.0",
     "rimraf": "^3.0.2"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "peerDependencies": {
+    "react": "^0.13.0 || ^0.14.0 || ^15.0.0 || ^16.0.0"
+  }
 }
