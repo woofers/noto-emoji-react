@@ -3,14 +3,18 @@ const svgr = require('@svgr/core').default
 const fs = require('fs')
 const path = require('path')
 const raw = path.join(__dirname, '../noto/svg')
-const out = path.join(__dirname, '../lib')
 const cli = require('child_process')
 const util = require('util')
 const exec = util.promisify(cli.exec)
 const config = require('../config')
 const mkdir = require('mkdirp')
+const toReactFromPng = require('./template')
 
 const img = postfix => path.join(__dirname, `../noto/svg-${postfix}`)
+
+const ext = (file, options) => options && options.name === 'svg' ? file : file.replace('.svg', '.png')
+
+const out = name => path.join(__dirname, `../lib/${name}`)
 
 const inkscape = async options => {
   try {
@@ -23,10 +27,11 @@ const inkscape = async options => {
   }
 }
 
-const writeFile = (file, content) => {
-  fs.writeFile(`${out}/${file}.js`, content, (err) => {
+const writeFile = async (pathname, content) => {
+  await mkdir(path.dirname(pathname))
+  fs.writeFile(pathname, content, (err) => {
     if (err) {
-      console.log(`Could not write ${file}.js`)
+      console.log(`Could not write ${pathname}`, err)
       return
     }
   })
@@ -59,55 +64,55 @@ const fonts = [
 const convertSvg = async options => {
   const { name, size } = options
   const baked = img(name)
+  await mkdir(baked)
   const isVector = name === 'svg'
-  mkdir(baked, {}, err => console.log(err))
   for (const emoji of (isVector ? fonts : Object.values(emojis).map(el => el.file))) {
     const options = (() => {
       if (isVector) return `--export-text-to-path --export-plain-svg=${baked}/${emoji}`
-      return `-w ${size} -h ${size} --export-png=${baked}/${emoji.replace('.svg', '.png')} `
+      return `-w ${size} -h ${size} --export-png=${baked}/${ext(emoji)} `
     })()
     const out = await inkscape(`${raw}/${emoji} ${options}`)
   }
 }
 
+const toReactFromSvg = (data, name) => {
+  const config = {
+    icon: true,
+    plugins: ['@svgr/plugin-svgo', '@svgr/plugin-jsx'],
+    svgo: true,
+    svgoConfig: {
+      plugins: [{
+        cleanupIDs: {
+          prefix: `${name}-`
+        }
+      }]
+    },
+    jsx: {
+      babelConfig: {
+        plugins: [[
+          '@babel/plugin-transform-react-jsx',
+          {
+            useBuiltIns: true
+          }
+        ]]
+      }
+    }
+  }
+  return svgr(data, config, { componentName: name })
+}
+
+const toReactComponent = isVector => isVector ? toReactFromSvg : toReactFromPng
+
 const toReact = options => {
-  if (options.name !== 'svg') return
   const baked = img(options.name)
-  const svg = options.name === 'svg' ? raw : baked
+  const isVector = options.name === 'svg'
+  const svg = isVector ? raw : baked
   let index = ''
   for (const emoji of Object.values(emojis)) {
     const { name, file } = emoji
-    index += `export { default as ${name} } from './${name}'\n`
-    fs.readFile(`${fonts.includes(file) ? baked : svg}/${file}`, 'utf8', (err, data) => {
-      if (err) {
-        console.log(`Could not read ${file}`)
-        return
-      }
-      const config = {
-        icon: true,
-        plugins: ['@svgr/plugin-svgo', '@svgr/plugin-jsx'],
-        svgo: true,
-        svgoConfig: {
-          plugins: [{
-            cleanupIDs: {
-              prefix: `${name}-`
-            }
-          }]
-        },
-        jsx: {
-          babelConfig: {
-            plugins: [[
-              '@babel/plugin-transform-react-jsx',
-              {
-                useBuiltIns: true
-              }
-            ]]
-          }
-        }
-      }
-      svgr(data, config, { componentName: name }).then(code => {
-        writeFile(name, code)
-      })
+    const data = fs.readFileSync(`${fonts.includes(file) ? baked : svg}/${ext(file, options)}`, isVector ? 'utf8' : null)
+    toReactComponent(isVector)(data, name).then(async code => {
+      await writeFile(`${out(options.name)}/${name}.js`, code)
     })
   }
   writeFile('index', index)
@@ -121,7 +126,7 @@ const make = async options => {
     console.log(e)
     return process.exit(2)
   }
- toReact(options)
+  toReact(options)
 }
 
 (async () => {
