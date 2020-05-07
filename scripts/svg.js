@@ -2,12 +2,15 @@ const data = require('../data/emoji')
 const svgr = require('@svgr/core').default
 const fs = require('fs')
 const path = require('path')
-const svg = path.join(__dirname, '../noto/svg');
-const baked = path.join(__dirname, '../noto/svg-baked');
-const out = path.join(__dirname, '../lib');
+const raw = path.join(__dirname, '../noto/svg')
+const out = path.join(__dirname, '../lib')
 const cli = require('child_process')
 const util = require('util')
 const exec = util.promisify(cli.exec)
+const config = require('../config')
+const mkdir = require('mkdirp')
+
+const img = postfix => path.join(__dirname, `../noto/svg-${postfix}`)
 
 const inkscape = async options => {
   try {
@@ -47,20 +50,30 @@ const convertNames = data => {
 
 const emojis = convertNames(data)
 
-
 const fonts = [
   'emoji_u1f947.svg',
   'emoji_u1f948.svg',
   'emoji_u1f949.svg'
 ]
 
-const convertSvg = async () => {
-  for (const emoji of fonts) {
-     const out = await inkscape(`${svg}/${emoji} --export-text-to-path --export-plain-svg=${baked}/${emoji}`)
+const convertSvg = async options => {
+  const { name, size } = options
+  const baked = img(name)
+  const isVector = name === 'svg'
+  mkdir(baked, {}, err => console.log(err))
+  for (const emoji of (isVector ? fonts : Object.values(emojis).map(el => el.file))) {
+    const options = (() => {
+      if (isVector) return `--export-text-to-path --export-plain-svg=${baked}/${emoji}`
+      return `-w ${size} -h ${size} --export-png=${baked}/${emoji.replace('.svg', '.png')} `
+    })()
+    const out = await inkscape(`${raw}/${emoji} ${options}`)
   }
 }
 
-const toReact = () => {
+const toReact = options => {
+  if (options.name !== 'svg') return
+  const baked = img(options.name)
+  const svg = options.name === 'svg' ? raw : baked
   let index = ''
   for (const emoji of Object.values(emojis)) {
     const { name, file } = emoji
@@ -100,13 +113,19 @@ const toReact = () => {
   writeFile('index', index)
 }
 
-(async () => {
+const make = async options => {
   try {
-    await convertSvg()
+    await convertSvg(options)
   }
   catch (e) {
     console.log(e)
     return process.exit(2)
   }
- toReact()
+ toReact(options)
+}
+
+(async () => {
+  for (options of config) {
+    await make(options)
+  }
 })()

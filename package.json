@@ -9,7 +9,7 @@
   "private": false,
   "sideEffects": false,
   "scripts": {
-    "clean": "rimraf lib/* noto/svg-baked",
+    "clean": "rimraf lib/* noto/svg-*",
     "build": "yarn clean && yarn build-react && yarn build-copy",
     "build-copy": "cp package.json LICENSE lib/.",
     "build-react": "node scripts/svg.js",
@@ -19,6 +19,7 @@
     "@babel/plugin-transform-react-jsx": "^7.9.4",
     "@svgr/core": "^5.4.0",
     "@svgr/plugin-svgo": "^5.4.0",
+    "mkdirp": "^1.0.4",
     "node-fetch": "^2.6.0",
     "rimraf": "^3.0.2"
   },
