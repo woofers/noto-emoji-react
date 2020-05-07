@@ -10,10 +10,9 @@
   "sideEffects": false,
   "scripts": {
     "clean": "rimraf lib/* noto/svg-baked",
-    "build": "yarn clean && yarn build-fonts && yarn build-react && yarn build-copy",
+    "build": "yarn clean && yarn build-react && yarn build-copy",
     "build-copy": "cp package.json LICENSE lib/.",
     "build-react": "node scripts/svg.js",
-    "build-fonts": "./scripts/bake-fonts.sh",
     "build-data": "node scripts/emoji.js > data/emoji.js"
   },
   "devDependencies": {

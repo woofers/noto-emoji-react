@@ -2,8 +2,23 @@ const data = require('../data/emoji')
 const svgr = require('@svgr/core').default
 const fs = require('fs')
 const path = require('path')
-const dir = path.join(__dirname, '../noto/svg-baked');
+const svg = path.join(__dirname, '../noto/svg');
+const baked = path.join(__dirname, '../noto/svg-baked');
 const out = path.join(__dirname, '../lib');
+const cli = require('child_process')
+const util = require('util')
+const exec = util.promisify(cli.exec)
+
+const inkscape = async options => {
+  try {
+    return await exec(`inkscape ${options}`)
+  }
+  catch (e) {
+    throw new Error(
+      `inkscape not installed: install with 'sudo apt-get install inkscape'`
+    )
+  }
+}
 
 const writeFile = (file, content) => {
   fs.writeFile(`${out}/${file}.js`, content, (err) => {
@@ -32,42 +47,66 @@ const convertNames = data => {
 
 const emojis = convertNames(data)
 
-let index = ''
 
-for (const emoji of Object.values(emojis)) {
-  const { name, file } = emoji
-  index += `export { default as ${name} } from './${name}'\n`
-  fs.readFile(`${dir}/${file}`, 'utf8', (err, data) => {
-    if (err) {
-      console.log(`Could not read ${file}`)
-      return
-    }
-    const config = {
-      icon: true,
-      plugins: ['@svgr/plugin-svgo', '@svgr/plugin-jsx'],
-      svgo: true,
-      svgoConfig: {
-        plugins: [{
-          cleanupIDs: {
-            prefix: `${name}-`
-          }
-        }]
-      },
-      jsx: {
-        babelConfig: {
-          plugins: [[
-            '@babel/plugin-transform-react-jsx',
-            {
-              useBuiltIns: true
-            }
-          ]]
-        }
-      }
-    }
-    svgr(data, config, { componentName: name }).then(code => {
-      writeFile(name, code)
-    })
-  })
+const fonts = [
+  'emoji_u1f947.svg',
+  'emoji_u1f948.svg',
+  'emoji_u1f949.svg'
+]
+
+const convertSvg = async () => {
+  for (const emoji of fonts) {
+     const out = await inkscape(`${svg}/${emoji} --export-text-to-path --export-plain-svg=${baked}/${emoji}`)
+  }
 }
 
-writeFile('index', index)
+const toReact = () => {
+  let index = ''
+  for (const emoji of Object.values(emojis)) {
+    const { name, file } = emoji
+    index += `export { default as ${name} } from './${name}'\n`
+    fs.readFile(`${fonts.includes(file) ? baked : svg}/${file}`, 'utf8', (err, data) => {
+      if (err) {
+        console.log(`Could not read ${file}`)
+        return
+      }
+      const config = {
+        icon: true,
+        plugins: ['@svgr/plugin-svgo', '@svgr/plugin-jsx'],
+        svgo: true,
+        svgoConfig: {
+          plugins: [{
+            cleanupIDs: {
+              prefix: `${name}-`
+            }
+          }]
+        },
+        jsx: {
+          babelConfig: {
+            plugins: [[
+              '@babel/plugin-transform-react-jsx',
+              {
+                useBuiltIns: true
+              }
+            ]]
+          }
+        }
+      }
+      svgr(data, config, { componentName: name }).then(code => {
+        writeFile(name, code)
+      })
+    })
+  }
+  writeFile('index', index)
+}
+
+(async () => {
+  try {
+    await convertSvg()
+  }
+  catch (e) {
+    console.log(e)
+    return process.exit(2)
+  }
+ toReact()
+})()
